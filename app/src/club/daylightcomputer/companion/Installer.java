@@ -34,8 +34,11 @@ public class Installer {
                 out.write(apk);
                 session.fsync(out);
             }
-            Intent result = new Intent(ACTION_RESULT)
-                    .setPackage(ctx.getPackageName())
+            // Explicit component — a manifest receiver with no intent-filter
+            // never hears an implicit broadcast (the club inspector caught
+            // this on PR #33; an implicit send here hangs the install).
+            Intent result = new Intent(ctx, InstallReceiver.class)
+                    .setAction(ACTION_RESULT)
                     .putExtra("dish", dish.name);
             PendingIntent pending = PendingIntent.getBroadcast(
                     ctx, sessionId, result,
