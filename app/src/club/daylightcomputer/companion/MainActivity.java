@@ -34,6 +34,7 @@ public class MainActivity extends Activity {
 
     private LinearLayout page;
     private List<Catalog.Dish> shelf = new ArrayList<>();
+    private List<Counter.Dish> counter = new ArrayList<>();
     private List<Inspector.Finding> findings = new ArrayList<>();
     private boolean offline = false;
 
@@ -41,11 +42,8 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (Build.VERSION.SDK_INT >= 33 &&
-                checkSelfPermission("android.permission.POST_NOTIFICATIONS")
-                        != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 1);
-        }
+        // First-run duties (permission, the butler's rounds) live in
+        // ClubActivity — the front room. This is the staff room.
         ShelfJobService.schedule(this);
 
         page = new LinearLayout(this);
@@ -86,10 +84,18 @@ public class MainActivity extends Activity {
                     fresh = new ArrayList<>();
                 }
             }
+            List<Counter.Dish> tasting;
+            try {
+                tasting = Counter.fetch(this);
+            } catch (Exception e) {
+                tasting = new ArrayList<>();
+            }
             final List<Catalog.Dish> result = fresh;
+            final List<Counter.Dish> onCounter = tasting;
             final boolean isOff = off;
             runOnUiThread(() -> {
                 shelf = result;
+                counter = onCounter;
                 offline = isOff;
                 findings = Inspector.inspect(this, shelf);
                 render();
@@ -114,6 +120,22 @@ public class MainActivity extends Activity {
             page.addView(off);
         }
         gap(16);
+
+        // The owner's tasting counter — only on a tablet that paired one.
+        if (!counter.isEmpty()) {
+            page.addView(label("ON THE COUNTER — JUST YOU"));
+            for (Counter.Dish d : counter) {
+                LinearLayout card = card();
+                card.addView(text(d.name, 18, true));
+                if (d.note != null && !d.note.isEmpty()) card.addView(muted(d.note));
+                card.addView(muted("resting since " +
+                        (d.added.length() >= 10 ? d.added.substring(0, 10) : d.added)));
+                card.addView(button("Taste it →", v -> startActivity(
+                        new Intent(this, DishWebActivity.class).putExtra("url", d.url))));
+                page.addView(card);
+            }
+            gap(20);
+        }
 
         page.addView(label("THE SHELF"));
         if (shelf.isEmpty()) {

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="club.daylightcomputer.companion"
-    android:versionCode="1"
-    android:versionName="0.1">
+    android:versionCode="2"
+    android:versionName="0.2">
 
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="33" />
 
@@ -26,8 +26,9 @@
 
     <application android:label="Club Companion">
 
+        <!-- The front room: the club website, full-screen. Home IS the shelf. -->
         <activity
-            android:name=".MainActivity"
+            android:name=".ClubActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -35,8 +36,25 @@
             </intent-filter>
         </activity>
 
+        <!-- The staff room: butler, inspector, reporter, and the counter. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true" />
+
+        <!-- A web dish served full-screen. Exported so the owner's Mac can
+             put a dish on the glass over adb (`daylight open`) — it renders
+             pages and grants nothing. -->
+        <activity
+            android:name=".DishWebActivity"
+            android:exported="true" />
+
         <service
             android:name=".ShelfJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true" />
+
+        <service
+            android:name=".CounterJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="true" />
 
